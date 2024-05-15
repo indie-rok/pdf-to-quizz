@@ -1,15 +1,11 @@
 def generate_quiz_prompt(
-    text, number_fill_the_blanks, number_multiple_options, number_order_the_words
+    number_fill_the_blanks, number_multiple_options, number_order_the_words
 ):
-    message = f"""I am going to give you a text:
+    message = f"""I am going to give you some images. This images are screen captures of a book. 
+    I want you to understand them. 
+    We are going to use the text on this images for a microlearning quiz app. The purpose is to generate questions.
 
-```
-{text}
-```
-
-This text is going to be used for a microlearning quiz app.
-
-There are 3 question types with their correspondent data shapes:
+There are different question types with their correspondent data shapes:
 
 ```
 class AnswerNode:
@@ -19,7 +15,7 @@ class AnswerNode:
 
     if number_fill_the_blanks > 0:
         message += f"""
-If you need {number_fill_the_blanks} questions of type FILL_THE_BLANK, each should look like:
+You will need {number_fill_the_blanks} questions of type FILL_THE_BLANK, each should look like:
 ```
 {{
     'id': 'uuid',
@@ -34,7 +30,7 @@ If you need {number_fill_the_blanks} questions of type FILL_THE_BLANK, each shou
 
     if number_multiple_options > 0:
         message += f"""
-If you need {number_multiple_options} questions of type MULTIPLE_OPTION, each should look like:
+You will need {number_multiple_options} questions of type MULTIPLE_OPTION, each should look like:
 ```
 {{
     'id': 'uuid',
@@ -49,7 +45,7 @@ If you need {number_multiple_options} questions of type MULTIPLE_OPTION, each sh
 
     if number_order_the_words > 0:
         message += f"""
-If you need {number_order_the_words} questions of type ORDER_THE_WORDS, each should look like:
+You will need {number_order_the_words} questions of type ORDER_THE_WORDS, each should look like:
 ```
 {{
     'id': 'uuid',

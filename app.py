@@ -3,11 +3,12 @@ from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
 from io import BytesIO
 import base64
-from openai import OpenAI 
+from openai import OpenAI
 import tempfile
 import os
 from dotenv import load_dotenv
 from generate_quiz_prompt import generate_quiz_prompt
+from flask_parameter_validation import ValidateParameters, Route, Form
 
 load_dotenv()
 
@@ -20,7 +21,15 @@ model_name = "gpt-4o"
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 @app.route('/quizz', methods=['POST'])
-def process_pdf():
+@ValidateParameters()
+def process_pdf(
+        first_page: int = Form(min_int=0),
+        last_page: int = Form(min_int=1),
+        fill_the_blanks: int = Form(min_int=1, max_int=15),
+        multiple_options: int = Form(min_int=1, max_int=15),
+        order_the_words: int = Form(min_int=1, max_int=15)
+    ):
+    
     auth_token = request.headers.get('Authorization')
     if auth_token != SHARED_SECRET:
         return jsonify({"error": "Unauthorized"}), 401
@@ -28,19 +37,12 @@ def process_pdf():
     if 'pdf_file' not in request.files:
         return jsonify({"error": "No PDF file provided"}), 400
 
-
     pdf_file = request.files['pdf_file']
     if pdf_file.filename.split('.')[-1].lower() != 'pdf':
         return jsonify({"error": "File is not a PDF"}), 400
 
-    try:
-        first_page = int(request.form.get('first_page', 1))
-        last_page = int(request.form.get('last_page', 1))
-    except ValueError:
-        return jsonify({"error": "Page numbers must be integers"}), 400
-
     if first_page > last_page:
-        return jsonify({"error": "First page cannot be greater than last page"}), 400
+        return jsonify({"error": "First page cannot be greater than last_page"}), 400
 
     if last_page - first_page > 10:
         return jsonify({"error": "Page range exceeds the maximum allowed of 10 pages"}), 400
@@ -49,14 +51,13 @@ def process_pdf():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_pdf_path = os.path.join(temp_dir, secure_filename(pdf_file.filename))
         pdf_file.save(temp_pdf_path)
-
+        
         pdf_size = pdf_file.tell()
-
         if pdf_size == 0:
             return jsonify({"error": "PDF file is empty"}), 400
 
         try:
-            images_from_memory = convert_from_path(temp_pdf_path, first_page=first_page,last_page=last_page)
+            images_from_memory = convert_from_path(temp_pdf_path, first_page=first_page, last_page=last_page)
             print("Conversion done: ", pdf_file.filename)
             
             image_messages = []
@@ -72,19 +73,19 @@ def process_pdf():
                         "url": f"data:image/jpeg;base64,{base64_image}"
                     }
                 })
-
+                
             # Creating the completion request with all images in a single message
             response = client.chat.completions.create(
                 model=model_name,
                 messages=[
-                    {"role": "system", "content": "You are an excelent curriculum designer"},
-                    {"role": "user", "content": generate_quiz_prompt()},
+                    {"role": "system", "content": "You are an excellent curriculum designer"},
+                    {"role": "user", "content": generate_quiz_prompt(fill_the_blanks,multiple_options, order_the_words)},
                     {"role": "user", "content": image_messages}
                 ],
                 temperature=0.0,
             )
 
-            print("TOKENS USED:", response.usage.total_tokens,'\n')
+            print("TOKENS USED:", response.usage.total_tokens, '\n')
 
             # Return the response from the model
             return jsonify({"summary": response.choices[0].message.content})
