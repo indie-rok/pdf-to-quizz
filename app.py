@@ -44,6 +44,11 @@ def validate_page_range(first_page, last_page):
         return "Page range exceeds the maximum allowed of 10 pages"
     return None
 
+def validate_at_least_one_question(fill_the_blanks,multiple_options,order_the_words):
+    if fill_the_blanks + multiple_options + order_the_words == 0:
+        return "There should be at least one question"
+    return None
+
 def convert_pdf_to_images(pdf_path, first_page, last_page):
     return convert_from_path(pdf_path, first_page=first_page, last_page=last_page)
 
@@ -79,9 +84,9 @@ def create_chat_completion(client, model_name, image_messages, fill_the_blanks, 
 def process_pdf(
         first_page: int = Form(min_int=0),
         last_page: int = Form(min_int=1),
-        fill_the_blanks: int = Form(min_int=1, max_int=15),
-        multiple_options: int = Form(min_int=1, max_int=15),
-        order_the_words: int = Form(min_int=1, max_int=15)
+        fill_the_blanks: int = Form(min_int=0, max_int=15),
+        multiple_options: int = Form(min_int=0, max_int=15),
+        order_the_words: int = Form(min_int=0, max_int=15)
     ):
     
     auth_token = request.headers.get('Authorization')
@@ -94,6 +99,10 @@ def process_pdf(
         return jsonify({"error": error}), 400
 
     error = validate_page_range(first_page, last_page)
+    if error:
+        return jsonify({"error": error}), 400
+
+    error = validate_at_least_one_question(fill_the_blanks,multiple_options,order_the_words)
     if error:
         return jsonify({"error": error}), 400
 

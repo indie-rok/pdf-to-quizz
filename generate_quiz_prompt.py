@@ -16,13 +16,14 @@ class AnswerNode:
     if number_fill_the_blanks > 0:
         message += f"""
 You will need {number_fill_the_blanks} questions of type FILL_THE_BLANK, each should look like:
+It should have at least 4 answer_options, only one correct.
 ```
 {{
     'id': 'uuid',
     'type': 'FILL_THE_BLANK',
     'question': 'String',
     'answer_options': [AnswerNode()],
-    'correct_answer': int,  # index of answer_options with correct answer
+    'correct_answer': int,  # index of answer_options with correct answer. This correct_answer index is always different. i.e not always 0
     'correct_reason': 'String'
 }}
 ```
@@ -31,13 +32,14 @@ You will need {number_fill_the_blanks} questions of type FILL_THE_BLANK, each sh
     if number_multiple_options > 0:
         message += f"""
 You will need {number_multiple_options} questions of type MULTIPLE_OPTION, each should look like:
+Mix between true/false or general questions with at least 4 answer_options
 ```
 {{
     'id': 'uuid',
     'type': 'MULTIPLE_OPTION',
     'question': 'String',
     'answer_options': [AnswerNode()],
-    'correct_answer': int,  # index of answer_options with correct answer
+    'correct_answer': int,  # index of answer_options with correct answer. This correct_answer index is always different. i.e not always 0
     'correct_reason': 'String'
 }}
 ```

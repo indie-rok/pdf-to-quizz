@@ -92,5 +92,33 @@ class FlaskAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b'Page range exceeds the maximum allowed of 10 pages', response.data)
 
+    @patch('app.client.chat.completions.create')
+    def test_error_when_no_questions_sent(self, mock_openai):
+        data = {
+            'first_page': '1',
+            'last_page': '5',
+            'fill_the_blanks': '0',
+            'multiple_options': '0',
+            'order_the_words': '0',
+            'pdf_file': (BytesIO(b"%PDF-1.4"), 'test.pdf')
+        }
+        response = self.app.post('/quizz', data=data, headers=self.headers, content_type='multipart/form-data')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b'There should be at least one question', response.data)
+
+    @patch('app.client.chat.completions.create')
+    def test_no_error_when_at_least_one_question_sent(self, mock_openai):
+        data = {
+            'first_page': '1',
+            'last_page': '5',
+            'fill_the_blanks': '1',
+            'multiple_options': '0',
+            'order_the_words': '0',
+            'pdf_file': (BytesIO(b"%PDF-1.4"), 'test.pdf')
+        }
+        response = self.app.post('/quizz', data=data, headers=self.headers, content_type='multipart/form-data')
+        self.assertEqual(response.status_code, 500) #server error not validation error, thats good
+
+
 if __name__ == '__main__':
     unittest.main()
