@@ -26,6 +26,15 @@ class FlaskAppTestCase(unittest.TestCase):
         response = self.app.post('/quizz', data=data, headers=self.headers, content_type='multipart/form-data')
         self.assertEqual(response.status_code, 400)
         self.assertIn(b'No PDF file provided', response.data)
+        
+    @patch('app.client.chat.completions.create')
+    def test_missing_params(self, mock_openai):
+        data = {
+            'first_page': '1',
+            'last_page': '1',
+        }
+        response = self.app.post('/quizz', data=data, headers=self.headers, content_type='multipart/form-data')
+        self.assertEqual(response.status_code, 400)
 
     @patch('app.client.chat.completions.create')
     def test_invalid_file_type(self, mock_openai):

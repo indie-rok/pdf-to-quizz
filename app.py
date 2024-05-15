@@ -20,6 +20,60 @@ model_name = "gpt-4o"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def validate_auth_token(auth_token):
+    if auth_token != SHARED_SECRET:
+        return False
+    return True
+
+def validate_pdf_file(pdf_file):
+    if not pdf_file:
+        return "No PDF file provided"
+    if pdf_file.filename.split('.')[-1].lower() != 'pdf':
+        return "File is not a PDF"
+    return None
+
+def validate_pdf_size(pdf_file):
+    if pdf_file.tell() == 0:
+        return "PDF file is empty"
+    return None
+
+def validate_page_range(first_page, last_page):
+    if first_page > last_page:
+        return "First page cannot be greater than last_page"
+    if last_page - first_page > 10:
+        return "Page range exceeds the maximum allowed of 10 pages"
+    return None
+
+def convert_pdf_to_images(pdf_path, first_page, last_page):
+    return convert_from_path(pdf_path, first_page=first_page, last_page=last_page)
+
+def encode_images_to_base64(images):
+    image_messages = []
+    for image in images:
+        img_byte_arr = BytesIO()
+        image.save(img_byte_arr, format='JPEG')
+        base64_image = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+        image_messages.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_image}"
+            }
+        })
+    return image_messages
+
+def create_chat_completion(client, model_name, image_messages, fill_the_blanks, multiple_options, order_the_words):
+    messages = [
+        {"role": "system", "content": "You are an excellent curriculum designer"},
+        {"role": "user", "content": generate_quiz_prompt(fill_the_blanks, multiple_options, order_the_words)},
+        {"role": "user", "content": image_messages}
+    ]
+    response = client.chat.completions.create(
+        model=model_name,
+        messages=messages,
+        temperature=0.0,
+    )
+    return response
+
 @app.route('/quizz', methods=['POST'])
 @ValidateParameters()
 def process_pdf(
@@ -31,63 +85,34 @@ def process_pdf(
     ):
     
     auth_token = request.headers.get('Authorization')
-    if auth_token != SHARED_SECRET:
+    if not validate_auth_token(auth_token):
         return jsonify({"error": "Unauthorized"}), 401
 
-    if 'pdf_file' not in request.files:
-        return jsonify({"error": "No PDF file provided"}), 400
+    pdf_file = request.files.get('pdf_file')
+    error = validate_pdf_file(pdf_file)
+    if error:
+        return jsonify({"error": error}), 400
 
-    pdf_file = request.files['pdf_file']
-    if pdf_file.filename.split('.')[-1].lower() != 'pdf':
-        return jsonify({"error": "File is not a PDF"}), 400
+    error = validate_page_range(first_page, last_page)
+    if error:
+        return jsonify({"error": error}), 400
 
-    if first_page > last_page:
-        return jsonify({"error": "First page cannot be greater than last_page"}), 400
-
-    if last_page - first_page > 10:
-        return jsonify({"error": "Page range exceeds the maximum allowed of 10 pages"}), 400
-
-    # Save the file to a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_pdf_path = os.path.join(temp_dir, secure_filename(pdf_file.filename))
         pdf_file.save(temp_pdf_path)
         
-        pdf_size = pdf_file.tell()
-        if pdf_size == 0:
-            return jsonify({"error": "PDF file is empty"}), 400
+        error = validate_pdf_size(pdf_file)
+        
+        if error:
+            return jsonify({"error": error}), 400
 
         try:
-            images_from_memory = convert_from_path(temp_pdf_path, first_page=first_page, last_page=last_page)
-            print("Conversion done: ", pdf_file.filename)
-            
-            image_messages = []
-
-            # Encode all images to base64 and prepare their message format
-            for image in images_from_memory:
-                img_byte_arr = BytesIO()
-                image.save(img_byte_arr, format='JPEG')
-                base64_image = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
-                image_messages.append({
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                })
-                
-            # Creating the completion request with all images in a single message
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {"role": "system", "content": "You are an excellent curriculum designer"},
-                    {"role": "user", "content": generate_quiz_prompt(fill_the_blanks,multiple_options, order_the_words)},
-                    {"role": "user", "content": image_messages}
-                ],
-                temperature=0.0,
-            )
+            images = convert_pdf_to_images(temp_pdf_path, first_page, last_page)
+            image_messages = encode_images_to_base64(images)
+            response = create_chat_completion(client, model_name, image_messages, fill_the_blanks, multiple_options, order_the_words)
 
             print("TOKENS USED:", response.usage.total_tokens, '\n')
 
-            # Return the response from the model
             return jsonify({"summary": response.choices[0].message.content})
 
         except Exception as e:
