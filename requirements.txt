@@ -1,6 +1,6 @@
 Flask==3.0.3
 Flask_Parameter_Validation==2.3.1
 openai==1.30.1
-pdf2image==1.17.0
 python-dotenv==1.0.1
 Werkzeug==3.0.3
+poppler-utils==0.1.0
