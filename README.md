@@ -1,3 +1,9 @@
+### creat venv
+
+```
+ python3 -m venv myprojectenv
+```
+
 ### running venv
 
 ```
