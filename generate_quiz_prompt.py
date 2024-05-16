@@ -59,7 +59,7 @@ You will need {number_order_the_words} questions of type ORDER_THE_WORDS, each s
       {{ 'value': 'SELECT' }},
       {{ 'value': 'from' }},
       {{ 'value': 'Users' }},
-    ],
+    ], # don't have points (.) as possible values for answer_options. Find another word or a longer sentence
     'correct_answer': [1, 0, 2, 3],  # array with the correct order of words
 }}
 
@@ -70,6 +70,7 @@ Limit the question_text to 7 words max.
     message += """
 Create questions that will help test and remember the comprehension of the text.
 Mix between question types.
+I want the text plain text, to be parse by JS JSON.parse()
 I want only output as JSON (array of objects). No extra comments or suggestions.
 """
 
