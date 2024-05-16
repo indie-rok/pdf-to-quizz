@@ -9,10 +9,11 @@ import os
 from dotenv import load_dotenv
 from generate_quiz_prompt import generate_quiz_prompt
 from flask_parameter_validation import ValidateParameters, Route, Form
+import logging
 
 load_dotenv()
-
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 SHARED_SECRET = os.getenv('SHARED_SECRET')
@@ -120,9 +121,10 @@ def process_pdf(
             image_messages = encode_images_to_base64(images)
             response = create_chat_completion(client, model_name, image_messages, fill_the_blanks, multiple_options, order_the_words)
 
-            print("TOKENS USED:", response.usage.total_tokens, '\n')
+            logger.info("TOKENS USED:", response.usage.total_tokens, '\n')
 
             return jsonify({"summary": response.choices[0].message.content})
 
         except Exception as e:
+            logger.info("quiz with error:", response.choices[0].message.content, '\n')
             return jsonify({"error": str(e)}), 500
