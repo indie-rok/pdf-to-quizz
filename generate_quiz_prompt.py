@@ -2,8 +2,9 @@ def generate_quiz_prompt(
     number_fill_the_blanks, number_multiple_options, number_order_the_words
 ):
     message = f"""I am going to give you some images. This images are screen captures of a book. 
-    I want you to understand them. 
+    I want you to understand them. Detect the language of the images.
     We are going to use the text on this images for a microlearning quiz app. The purpose is to generate questions.
+    Questions and answers should be generated in the language of the book.
 
 There are different question types with their correspondent data shapes:
 
