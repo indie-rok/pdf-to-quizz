@@ -70,7 +70,7 @@ Limit the question_text to 7 words max.
     message += """
 Create questions that will help test and remember the comprehension of the text.
 Mix between question types.
-I want the text plain text, to be parse by JS JSON.parse()
+I want the text plain text, to be parse by JS JSON.parse(). That means do NOT add ```json at the beggin or end of the generated string
 I want only output as JSON (array of objects). No extra comments or suggestions.
 """
 
