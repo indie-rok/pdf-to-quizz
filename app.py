@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 SHARED_SECRET = os.getenv('SHARED_SECRET')
 S3_BUCKET = os.getenv('AWS_BUCKET_NAME')
+AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
 
 import process_pdf
 import pdf_to_image

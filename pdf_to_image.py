@@ -9,7 +9,7 @@ import boto3
 from botocore.exceptions import NoCredentialsError
 import logging
 
-from app import app, logger, S3_BUCKET
+from app import app, logger, S3_BUCKET, AWS_DEFAULT_REGION
 
 s3_client = boto3.client('s3')
 
@@ -34,6 +34,7 @@ def pdf_to_images():
             return jsonify({"error": "Missing parameters"}), 400
 
         temp_pdf_path = download_from_s3(url)
+        slides_images_urls = []
         
         images = convert_from_path(temp_pdf_path)
 
@@ -62,7 +63,11 @@ def pdf_to_images():
                 }
             )
 
-        return jsonify({"summary": True})
+            prod_url = f"https://{S3_BUCKET}.s3.{AWS_DEFAULT_REGION}.amazonaws.com/{location}"
+
+            slides_images_urls.append( { "url": prod_url} )
+
+        return jsonify({"slides": slides_images_urls })
 
     except Exception as e:
         logger.error("error:", e ,'\n')
