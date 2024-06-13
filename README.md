@@ -42,6 +42,10 @@ pip install -r requirements.txt
 
 sudo apt install poppler-utils
 
+### set up env files
+
+cp .env.copy .env
+
 ### Running local
 
 ```

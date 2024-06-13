@@ -3,7 +3,7 @@ import os
 loglevel = 'debug'
 accesslog = './logs/access.log'  # Path to access logs
 errorlog = './logs/error.log'  # Path to error logs
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" "%(M)s"'
 
 workers = int(os.environ.get('GUNICORN_PROCESSES', '2'))
 
