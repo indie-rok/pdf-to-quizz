@@ -7,9 +7,8 @@ from flask import request, jsonify
 from pdf2image import convert_from_path
 import boto3
 from botocore.exceptions import NoCredentialsError
-import logging
 
-from app import app, logger, S3_BUCKET, AWS_DEFAULT_REGION
+from app import app, logger, S3_BUCKET, AWS_DEFAULT_REGION, SHARED_SECRET
 
 s3_client = boto3.client('s3')
 
@@ -23,10 +22,20 @@ def download_from_s3(url):
 
     return temp_filename
 
+def validate_auth_token(auth_token):
+    if auth_token != SHARED_SECRET:
+        return False
+    return True
+
 @app.route('/pdf_to_image', methods=['POST'])
 def pdf_to_images():
     try:
         data = request.get_json()
+
+        auth_token = request.headers.get('Authorization')
+        if not validate_auth_token(auth_token):
+            return jsonify({"error": "Unauthorized"}), 401
+    
         url = data.get('pdf_url')
         file_uuid = data.get('file_uuid')
 
