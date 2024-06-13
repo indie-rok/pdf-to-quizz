@@ -57,3 +57,42 @@ flask --debug run --host 0.0.0.0  --port 6001
 ```
 gunicorn --config gunicorn_config.py app:app
 ```
+
+### create service to auto start
+
+```
+sudo nano /etc/systemd/system/myproject.service
+```
+
+```
+[Unit]
+Description=Gunicorn instance to serve myproject
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/pdf-to-quizz
+Environment="PATH=/home/ubuntu/pdf-to-quizz/env/bin:/usr/bin"
+ExecStart=/home/ubuntu/pdf-to-quizz/env/bin/gunicorn --config gunicorn_config.py app:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+sudo systemctl start myproject
+sudo systemctl enable myproject
+sudo systemctl status myproject
+sudo systemctl stop myproject
+sudo systemctl restart myproject
+sudo systemctl restart myproject
+```
+
+### debug
+
+```
+journalctl -u myproject
+tail -f ./logs/error.log
+tail -f ./logs/access.log
+```
