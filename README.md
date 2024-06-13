@@ -38,6 +38,10 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
+### install popple-utils
+
+sudo apt install poppler-utils
+
 ### Running local
 
 ```
