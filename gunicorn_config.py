@@ -17,3 +17,7 @@ bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:6001')
 forwarded_allow_ips = '*'
 
 secure_scheme_headers = { 'X-Forwarded-Proto': 'https' }
+
+# timeout stuff
+graceful_timeout = 120
+timeout = 120
